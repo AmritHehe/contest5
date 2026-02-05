@@ -35,6 +35,10 @@ export const ServicesSchema = z.object({
     durationMinutes : z.int().multipleOf(30).min(30).max(120) ,
 
 })
+export const AppointmentSchema = z.object({ 
+    slotId : z.string()
+
+})
 
 export const AvailabilitySchema = z.object({
     dayOfWeek : z.int().min(0).max(6),
@@ -249,7 +253,8 @@ app.get("/services" ,authenticate  , async (req , res) => {
             where, 
             include : { 
                 provider : true
-            }
+            } ,
+            
         })
         const FilterdServices = services.map( (x , i)=> ({ 
             id : services[i].id , 
@@ -283,7 +288,7 @@ app.get("/services/:serviceId/slots" ,authenticate  , async (req , res) => {
         })
     }
     try { 
-        const services = await prisma.availablity.findMany({
+        const availability = await prisma.availablity.findMany({
             where : { 
                 startTime : { 
                     gte : date
@@ -291,12 +296,13 @@ app.get("/services/:serviceId/slots" ,authenticate  , async (req , res) => {
                 endTime : { 
                     gte : date
                 }
+                
             }, 
         })
-        const FilterdServices = services.map( (x , i)=> ({ 
-            slotid : services[i].id , 
-            startTime : services[i].startTime , 
-            endTime : services[i].endTime , 
+        const FilterdServices = availability.map( (x , i)=> ({ 
+            slotid : availability[i].id , 
+            startTime : availability[i].startTime , 
+            endTime : availability[i].endTime , 
         }))
         return res.status(201).json({ 
             serviceId : serviceId , 
@@ -308,6 +314,58 @@ app.get("/services/:serviceId/slots" ,authenticate  , async (req , res) => {
         return res.status(500).json(error500InternalServerError)
     }
 })
+app.post("/appointments" ,authenticate  , async (req , res) => { 
+    const userId = req.userId 
+    const role = req.role
+    //@ts-ignore
+    if(role != "USER") { 
+        return res.status(403).json(error403Forbidden)
+    }
+
+    try { 
+      
+    }
+    catch(e){ 
+        return res.status(500).json(error500InternalServerError)
+    }
+})
+app.get("/appointments/me" ,authenticate  , async (req , res) => { 
+    const userId = req.userId 
+    //@ts-ignore
+ 
+    const exisitngService = await prisma.service.findUnique({
+        where : { 
+            id : serviceId
+        }
+    })
+    if(!exisitngService){ 
+        return res.status(404).json({
+            message : "service not found "
+        })
+    }
+    try { 
+        const appointments = await prisma.appointment.findMany({
+            where : { 
+                userId : userId
+                
+            }, 
+        })
+        const FilterdServices = availability.map( (x , i)=> ({ 
+            slotid : availability[i].id , 
+            startTime : availability[i].startTime , 
+            endTime : availability[i].endTime , 
+        }))
+        return res.status(201).json({ 
+            serviceId : serviceId , 
+            date : date , 
+            slots : FilterdServices
+        })
+    }
+    catch(e){ 
+        return res.status(500).json(error500InternalServerError)
+    }
+})
+
 
 
 
