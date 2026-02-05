@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/client"
+}
+
+enum Role {
+  USER
+  SERVICE_PROVIDER
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  password     String
+  role         Role
+  createdAt    DateTime      @default(now())
+  service Service[]
+  Appointment Appointment[]
+}
+
+enum ServiceType { 
+  MEDICAL
+  HOUSE_HELP
+  BEAUTY
+  FITNESS
+  EDUCATION
+  OTHER
+}
+
+model Service { 
+  id  String @id @default(uuid())
+  name String
+  type ServiceType
+  providerId String
+  provider User @relation(fields: [providerId], references: [id])
+  durationMinutes Int
+  createdAt DateTime @default(now())
+  Avaiablity Availablity[]
+  Appointment Appointment[]
+}
+
+
+
+model Availablity {
+  id String @id @default(uuid())
+  serviceId String
+  service Service @relation(fields: [serviceId] , references: [id])
+  dayOfWeek Int 
+  startTime DateTime @db.Time(0)
+  endTime DateTime @db.Time(0)
+}
+enum AppointmentStatus { 
+  BOOKED
+  CANCELLED
+}
+model Appointment{ 
+  id String  @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId] , references: [id])
+  serviceId String
+  service Service @relation(fields: [serviceId] , references: [id])
+  date DateTime @db.Date
+  startTime DateTime @db.Time(0)
+  endTime DateTime @db.Time(0)
+  slotId String @unique
+  status AppointmentStatus
+  createdAt DateTime @default(now())
+}
